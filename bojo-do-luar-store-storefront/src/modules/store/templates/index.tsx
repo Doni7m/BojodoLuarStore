@@ -1,39 +1,53 @@
 import { Suspense } from "react"
 
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@modules/store/components/refinement-list"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { getCategoryByHandle } from "@lib/data/categories"
+import ProductSection from "../components/product-section"
 
-import PaginatedProducts from "./paginated-products"
-
-const StoreTemplate = ({
+const StoreTemplate = async ({
   sortBy,
   page,
   countryCode,
 }: {
-  sortBy?: SortOptions
+  sortBy?: string
   page?: string
   countryCode: string
 }) => {
-  const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const wineSections = [
+    { handle: "branco", title: "Vinhos Brancos" },
+    { handle: "tinto", title: "Vinhos Tintos" },
+    { handle: "frisante", title: "Vinhos Frisantes" },
+    { handle: "rose", title: "Vinhos Rosé" },
+    { handle: "skin-contact", title: "Skin Contact" },
+  ]
+
+  const sections = await Promise.all(
+    wineSections.map(async ({ handle, title }) => {
+      try {
+        const category = await getCategoryByHandle([handle])
+        return { title, categoryId: category?.id, handle }
+      } catch {
+        return { title, categoryId: undefined, handle }
+      }
+    })
+  )
 
   return (
-    <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
-      data-testid="category-container"
-    >
-      <RefinementList sortBy={sort} />
+    <div className="flex flex-col py-6 content-container" data-testid="store-container">
       <div className="w-full">
         <div className="mb-8 text-2xl-semi">
-          <h1 data-testid="store-page-title">All products</h1>
+          <h1 data-testid="store-page-title">Nossos Vinhos</h1>
         </div>
         <Suspense fallback={<SkeletonProductGrid />}>
-          <PaginatedProducts
-            sortBy={sort}
-            page={pageNumber}
-            countryCode={countryCode}
-          />
+          {sections.map((section, index) => (
+            <ProductSection
+              key={index}
+              title={section.title}
+              categoryId={section.categoryId}
+              categoryHandle={section.handle}
+              countryCode={countryCode}
+            />
+          ))}
         </Suspense>
       </div>
     </div>

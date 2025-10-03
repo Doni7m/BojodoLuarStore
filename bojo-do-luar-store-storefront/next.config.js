@@ -1,4 +1,5 @@
 const checkEnvVariables = require("./check-env-variables")
+const fs = require('fs')
 
 checkEnvVariables()
 
@@ -18,10 +19,18 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+
+  turbopack: {
+    root: __dirname,
+  },
   images: {
     remotePatterns: [
       {
         protocol: "http",
+        hostname: "localhost",
+      },
+      {
+        protocol: "https",
         hostname: "localhost",
       },
       {
